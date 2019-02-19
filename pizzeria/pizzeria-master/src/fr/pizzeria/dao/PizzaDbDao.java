@@ -5,12 +5,14 @@ import java.util.Iterator;
 import java.util.List;
 
 import fr.pizzeria.model.Pizza;
+import jdbc.properties.SQL;
 
-public class PizzaMemDao implements IPizzaDao {
+public class PizzaDbDao implements IPizzaDao {
 
-	private List<Pizza> pizzas = new ArrayList<>();
+	private List<Pizza> pizzas = new ArrayList<Pizza>();
+	private SQL sql = new SQL();
 	
-	public PizzaMemDao(){
+	public PizzaDbDao(){
 		pizzas.add(new Pizza("PEP", "Pépéroni", 12.50));
 		pizzas.add(new Pizza("MAR", "Margherita", 14.00));
 		pizzas.add(new Pizza("REIN", "La Reine", 11.50));
@@ -18,22 +20,24 @@ public class PizzaMemDao implements IPizzaDao {
 		pizzas.add(new Pizza("CAN", "La cannibale", 12.50));
 		pizzas.add(new Pizza("SAV", "La savoyarde", 13.00));
 		pizzas.add(new Pizza("ORI", "L’orientale", 13.50));
-		pizzas.add(new Pizza("IND", "L’indienne", 14.00));
+		pizzas.add(new Pizza("IND", "L\"indienne", 14.00));
+		sql.insert((ArrayList<Pizza>) pizzas);
 	}
 
 	@Override
 	public List<Pizza> findAllPizzas() {
-		return pizzas;
+		return sql.select_list("Select * from pizza");
 	}
 
 	@Override
 	public void saveNewPizza(Pizza pizza) {
-		pizzas.add(pizza);
-
+		sql.insert(pizza);
 	}
 
 	@Override
 	public void updatePizza(String codePizza, Pizza pizza) {
+		sql.update("update pizza set pizza_code='"+pizza.getCode()+"', pizza_libelle ='"+pizza.getLibelle()
+		+"',pizza_price='"+pizza.getPrix()+"' where pizza_code='"+codePizza+"'");
 		for (Pizza p: pizzas){
 			if (p.getCode().equals(codePizza)){
 				p.setCode(pizza.getCode());
@@ -42,18 +46,11 @@ public class PizzaMemDao implements IPizzaDao {
 				return;
 			}
 		}
-
 	}
 
 	@Override
 	public void deletePizza(String codePizza) {
-		Iterator<Pizza> it = pizzas.iterator();
-		while (it.hasNext()){
-			Pizza p = it.next();
-			if (p.getCode().equals(codePizza)){
-				it.remove();
-			}
-		}
+		sql.delete("delete from pizza where pizza_code='"+codePizza+"'");
 	}
 
 	@Override

@@ -8,7 +8,6 @@ create table pizza
 	id_pizza int(5) auto_increment PRIMARY KEY,
     pizza_code varchar(4) NOT NULL,
 	pizza_libelle varchar(20) NOT NULL,
-    pizza_price float(4) default 0
+    pizza_price float(4) default 0,
+    pizza_categorie varchar(15) NOT null
 );
-
-update pizza set pizza_code='gfd', pizza_libelle ='fds',pizza_price='23.0' where pizza_code='IND';

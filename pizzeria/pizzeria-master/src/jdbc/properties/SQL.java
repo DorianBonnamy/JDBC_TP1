@@ -1,15 +1,10 @@
 package jdbc.properties;
 
-import java.sql.Statement;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Properties;
 
@@ -19,7 +14,6 @@ import fr.pizzeria.model.Pizza;
 public class SQL {
 
 	private Connection connexion;
-	private Statement lien;
 	private Properties prop = new Properties();
 	OutputStream output = null;
 	
@@ -29,8 +23,9 @@ public class SQL {
 
 			output = new FileOutputStream("jdbc.properties");
 
-			// set the properties value
+//			 set the properties value
 			prop.setProperty("database", "jdbc:mysql://localhost:3306/tp_jdbc_1?useSSL=false");
+//			prop.setProperty("database", "jdbc:mariadb://localhost:3306/tp_jdbc_1?useSSL=false");
 			prop.setProperty("dbuser", "root");
 			prop.setProperty("dbpassword", "");
 
@@ -42,17 +37,13 @@ public class SQL {
 		}
 	}
 	
-	private void initconnexion()
+	private Statement initconnexion() throws SQLException, ClassNotFoundException
 	{		
-		try {
 			Class.forName("com.mysql.jdbc.Driver");
+//			Class.forName("org.mariadb.jdbc.Driver");
 			connexion = DriverManager.
 					getConnection(prop.getProperty("database"), prop.getProperty("dbuser"),prop.getProperty( "dbpassword"));
-			lien = connexion.createStatement();
-		} catch (SQLException | ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+			return connexion.createStatement();
 	}
 
 	private void finnaly(){
@@ -69,11 +60,10 @@ public class SQL {
 	public int insert(String requete)
 	{
 		int nbPizza = 0;
-		initconnexion();
-
 		try {
-			nbPizza = ((java.sql.Statement) lien).executeUpdate(requete);
-		} catch (SQLException e) {
+			Statement statement = initconnexion();
+			nbPizza = statement.executeUpdate(requete);
+		} catch (SQLException | ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -85,17 +75,18 @@ public class SQL {
 	public int insert(Pizza requete)
 	{
 		int nbPizza = 0;
-		initconnexion();
-
+		
 		String chaine = "INSERT INTO pizza (pizza_code, pizza_libelle, pizza_price)"
 				+ " values ('"
 				+requete.getCode()+"','"
 				+requete.getLibelle()+"','"
 				+requete.getPrix()+"')";
 		System.out.println(chaine);
+		
 		try {
-			nbPizza += ((java.sql.Statement) lien).executeUpdate(chaine);
-		} catch (SQLException e) {
+			Statement statement = initconnexion();
+			nbPizza += statement.executeUpdate(chaine);
+		} catch (SQLException | ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -107,18 +98,25 @@ public class SQL {
 	public int insert (ArrayList<Pizza> requete)
 	{
 		int nbPizza = 0;
-		initconnexion();
 
+		Statement statement = null;
+		try {
+			statement = initconnexion();
+		} catch (ClassNotFoundException | SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
 		for(int i = 0 ; i < requete.size() ; i ++)
 		{
-			String chaine = "INSERT INTO pizza (pizza_code, pizza_libelle, pizza_price)"
+			String chaine = "INSERT INTO pizza (pizza_code, pizza_libelle, pizza_price, pizza_categorie)"
 					+ " values ('"
-					+requete.get(i).getCode()+"','"
-					+requete.get(i).getLibelle()+"','"
+					+requete.get(i).getCode()+"','"// Code de la pizza
+					+requete.get(i).getLibelle()+"','" //Nom de la pizza
 					+requete.get(i).getPrix()+"')";
-			System.out.println(chaine);
 			try {
-				nbPizza += ((java.sql.Statement) lien).executeUpdate(chaine);
+				
+				nbPizza += statement.executeUpdate(chaine);
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -130,9 +128,9 @@ public class SQL {
 
 	public void select(String requete)
 	{
-		initconnexion();
 		try {
-			ResultSet resultat = ((java.sql.Statement) lien).executeQuery(requete);
+			Statement statement = initconnexion();
+			ResultSet resultat = statement.executeQuery(requete);
 			while(resultat.next())
 			{
 				Integer id = resultat.getInt("ID");
@@ -140,8 +138,7 @@ public class SQL {
 				BigDecimal price = resultat.getBigDecimal("PRICE");
 				System.out.println("[id=" + id + " name=" + name + " price=" + price + "]");
 			}
-
-		} catch (SQLException e) {
+		} catch (SQLException | ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}	
@@ -152,9 +149,9 @@ public class SQL {
 	{
 		ArrayList<Pizza>pizza = new ArrayList<Pizza>();
 		
-		initconnexion();
 		try {
-			ResultSet resultat = ((java.sql.Statement) lien).executeQuery(requete);
+			Statement statement = initconnexion();
+			ResultSet resultat = statement.executeQuery(requete);
 			while(resultat.next())
 			{
 				
@@ -166,7 +163,7 @@ public class SQL {
 				System.out.println("[id=" + id + " name=" + name + " price=" + price + "]");
 			}
 
-		} catch (SQLException e) {
+		} catch (SQLException | ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}	
@@ -179,11 +176,11 @@ public class SQL {
 	{
 		System.out.println(requete);
 		int nbPizzasMaj = 0;
-		initconnexion();
 
 		try {
-			nbPizzasMaj = ((java.sql.Statement) lien).executeUpdate(requete);
-		} catch (SQLException e) {
+			Statement statement = initconnexion();
+			nbPizzasMaj = statement.executeUpdate(requete);
+		} catch (SQLException | ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -194,11 +191,10 @@ public class SQL {
 	
 	public void delete(String requete)
 	{
-		initconnexion();
-		
 		try {
-			lien.executeUpdate(requete);
-		} catch (SQLException e) {
+			Statement statement = initconnexion();
+			statement.executeUpdate(requete);
+		} catch (SQLException | ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
